@@ -1,29 +1,118 @@
-generator client{
-    provider="prisma-client-js"
+generator client {
+  provider = "prisma-client-js"
 }
 
 datasource db {
   provider  = "postgresql"
   url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL") 
+  directUrl = env("DIRECT_URL")
 }
 
+//------------enum--------------// 
+enum Role {
+  HR
+  LEAD
+  CANDIDATE
+}
 
-model JOB{
-  id          Int      @id @default(autoincrement())
-  externalId  String   @unique 
-  title       String
-  company     String
-  location    String
-  type        String?
-  description String?
-  url         String?  
-  postedAt    DateTime?
-  source      String?
-  rawJson     Json?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+enum ApplicationStatus {
+  APPLIED
+  SCREENING
+  INTERVIEW
+  HIRED
+  REJECTED
+}
+
+//------------models---------------//
+
+model User {
+  id           Int      @id @default(autoincrement())
+  email        String   @unique
+  passwordHash String
+  name         String?
+  photoUrl     String?
+  role         Role
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  applications  Application[] @relation("AppApplicant")
+  assignedApps  Application[] @relation("AppAssignee")
+  jobOwnerships JobOwner[]
+  candidate     Candidate?
+}
+
+model Candidate {
+  id           Int      @id @default(autoincrement())
+  userId       Int?     @unique
+  user         User?    @relation(fields: [userId], references: [id])
+  fullName     String
+  email        String
+  phone        String?
+  resumeUrl    String?
+  linkedinUrl  String?
+  portfolioUrl String?
+  photoUrl     String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  applications Application[]
+
+  @@index([email])
+}
+
+model JOB {
+  id           Int           @id @default(autoincrement())
+  externalId   String        @unique
+  title        String
+  company      String
+  location     String
+  type         String?
+  description  String?
+  url          String?
+  postedAt     DateTime?
+  source       String?
+  rawJson      Json?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  jobOwner     JobOwner?
+  applications Application[]
 
   @@index([company])
   @@index([location])
+}
+
+//========Relationship between job and HR============//
+model JobOwner {
+  jobId     Int      @unique
+  job       JOB      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  ownerId   Int
+  owner     User     @relation(fields: [ownerId], references: [id])
+  createdAt DateTime @default(now())
+
+  @@index([ownerId])
+}
+
+// ===========apply process========//
+model Application {
+  id    Int @id @default(autoincrement())
+  jobId Int
+  job   JOB @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  candidateId Int
+  candidate   Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+
+  applicantUserId Int?
+  applicantUser   User? @relation("AppApplicant", fields: [applicantUserId], references: [id])
+
+  status     ApplicationStatus @default(APPLIED)
+  assigneeId Int?
+  assignee   User?             @relation("AppAssignee", fields: [assigneeId], references: [id])
+  reason     String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([jobId, candidateId])
+  @@index([status])
+  @@index([assigneeId])
 }
