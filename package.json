@@ -1,7 +1,7 @@
 {
   "name": "myhirehub-backend",
   "version": "1.0.0",
-  "type": "module",
+  "type": "commonjs",
   "description": "HireHub Mini ATS Backend (Express + TypeScript + Prisma + PostgreSQL)",
   "main": "dist/index.js",
   "scripts": {
@@ -18,7 +18,8 @@
     "lint": "eslint . --ext .ts",
     "format": "prettier --write .",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "postinstall": "npx prisma generate && npm run prisma:migrate:deploy"
   },
 
 
