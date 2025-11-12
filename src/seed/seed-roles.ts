@@ -7,14 +7,13 @@ const prisma = new PrismaClient();
 async function main() {
   console.log("⚔️ Seeding Warcraft-themed test data...");
 
-  // 只运行一次：若已有用户则跳过
   const existingUsers = await prisma.user.count();
   if (existingUsers > 0) {
     console.log("Seed skipped: users already exist.");
     return;
   }
 
-  // 内测明文密码（仅测试用）
+
   const passwords = {
     lichKing: "Frostmourne123!",
     farseer: "SpiritWolf123!",
@@ -22,7 +21,7 @@ async function main() {
     grunt: "ForTheHorde123!",
   };
 
-  // 主管 LEAD：Lich King (Arthas)
+  // LEAD：Lich King (Arthas)
   const lichKing = await prisma.user.create({
     data: {
       email: "lichking@hirehub.local",
@@ -68,7 +67,7 @@ async function main() {
     },
   });
 
-  // 绑定若干现有 JOB 给 Farseer（HR）作为 JobOwner，不改 JOB 结构
+ 
   const someJobs = await prisma.jOB.findMany({
     take: 5,
     orderBy: { id: "asc" },
@@ -76,7 +75,7 @@ async function main() {
   await Promise.all(
     someJobs.map((j) =>
       prisma.jobOwner.upsert({
-        where: { jobId: j.id }, // jobId 是 unique，upsert 防重复
+        where: { jobId: j.id }, 
         update: { ownerId: farseer.id },
         create: { jobId: j.id, ownerId: farseer.id },
       })

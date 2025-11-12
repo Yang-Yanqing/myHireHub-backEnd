@@ -39,6 +39,9 @@ model User {
   assignedApps  Application[] @relation("AppAssignee")
   jobOwnerships JobOwner[]
   candidate     Candidate?
+
+
+  statusChanges StatusHistory[] @relation("StatusChangedBy")
 }
 
 model Candidate {
@@ -81,6 +84,25 @@ model JOB {
   @@index([location])
 }
 
+model StatusHistory {
+  id            Int          @id @default(autoincrement())
+
+  application   Application  @relation("ApplicationHistory", fields: [applicationId], references: [id], onDelete: Cascade)
+  applicationId Int
+
+  fromStatus    ApplicationStatus?
+  toStatus      ApplicationStatus
+
+  changedBy     User         @relation("StatusChangedBy", fields: [changedById], references: [id])
+  changedById   Int
+
+  reason        String?
+  createdAt     DateTime     @default(now())
+
+  @@index([applicationId])
+  @@index([changedById])
+}
+
 //========Relationship between job and HR============//
 model JobOwner {
   jobId     Int      @unique
@@ -109,8 +131,11 @@ model Application {
   assignee   User?             @relation("AppAssignee", fields: [assigneeId], references: [id])
   reason     String?
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  
+  histories  StatusHistory[] @relation("ApplicationHistory")
 
   @@unique([jobId, candidateId])
   @@index([status])

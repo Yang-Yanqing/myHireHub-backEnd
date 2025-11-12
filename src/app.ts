@@ -1,22 +1,24 @@
 import express from "express";
 import cors from "cors";
 import jobsRouter from "./routes/jobs.route";
+import authRouter from "./routes/auth.route";
+import applicationsRouter from "./routes/applications.route"
+import meRouter from "./routes/me.route"; 
+
+import { errorHandler } from "./middleware/error";
 
 const app = express();
 
-
 const ORIGIN = process.env.ORIGIN || "*";
-app.use(cors({ origin: ORIGIN }));
-
+app.use(cors({origin:process.env.ORIGIN,credentials:false}));
 app.use(express.json());
 
-
 app.use("/api/jobs", jobsRouter);
-
-
-app.get("/", (_, res) => res.status(200).send("ok"));
-
-
+app.use("/api/auth", authRouter);
+app.use("/api/applications", applicationsRouter);
+app.use("/api/me", meRouter); 
 app.get("/api/health", (_, res) => res.json({ status: "ok" }));
+
+app.use(errorHandler);
 
 export default app;
