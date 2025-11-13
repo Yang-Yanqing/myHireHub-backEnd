@@ -9,8 +9,24 @@ import { errorHandler } from "./middleware/error";
 
 const app = express();
 
-const ORIGIN = process.env.ORIGIN || "*";
-app.use(cors({origin:process.env.ORIGIN,credentials:false}));
+const allowedOrigins=process.env.ORIGIN
+  ?process.env.ORIGIN.split(",").map(s => s.trim()).filter(Boolean)
+  :[];
+
+const corsOptions: cors.CorsOptions = {
+  origin(origin, callback) {    
+    if (!origin) return callback(null, true);    
+    if (allowedOrigins.length === 0 || allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    return callback(new Error("Not allowed by CORS"));
+  },
+  methods: ["GET", "HEAD", "PUT", "PATCH", "POST", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+};
+
+
+app.use(cors(corsOptions));
 app.use(express.json());
 
 app.use("/api/jobs", jobsRouter);
